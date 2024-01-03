@@ -35,8 +35,11 @@ class DatabaseConnector:
         return db_tables_list
     
     def upload_to_db(self, df, name, engine):
+        df = pd.DataFrame(df)
         df.to_sql(name, engine, if_exists='replace')
 
 if __name__ == '__main__':
     db_connector = DatabaseConnector()
-    db_connector.list_db_tables()
+    creds = db_connector.read_db_creds("local_db_creds.yaml")
+    engine = db_connector.init_db_engine(creds)
+    db_connector.list_db_tables(engine)

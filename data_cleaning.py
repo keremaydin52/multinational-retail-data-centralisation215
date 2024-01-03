@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import re
 
 class DataCleaning:
 
@@ -9,7 +10,7 @@ class DataCleaning:
     def clean_user_data(self, user_data_df):
         '''Drop null values and clean date data in user data'''
         # Drop NULL values
-        user_data_df.dropna(inplace = True) 
+        user_data_df.dropna(subset=['user_uuid'], how='any', axis=0, inplace=True)
 
         # Handle date errors
         user_data_df['date_of_birth'] = pd.to_datetime(user_data_df['date_of_birth'], errors='coerce')
@@ -20,19 +21,24 @@ class DataCleaning:
     def clean_card_data(self, card_data_df):
         '''Drop null values and clean date data in card data'''
         # Drop NULL values
-        card_data_df.dropna(inplace = True) 
+        card_data_df.dropna(inplace=True) 
 
         # Handle date errors
-        card_data_df['expiry_date'] = pd.to_datetime(card_data_df['expiry_date'], format='%m/%Y', errors='coerce')
+        card_data_df['date_payment_confirmed'] = pd.to_datetime(card_data_df['date_payment_confirmed'], errors='coerce')
+        card_data_df.dropna(subset=['date_payment_confirmed'], inplace=True)
 
         return card_data_df
 
     def called_clean_store_data(self, df):
-        # Drop NULL values
-        df.dropna(inplace = True) 
-        # Handle date errors
-        df['opening_date'] = pd.to_datetime(df['opening_date'], errors='coerce')
+        # Drop unnecessary column
+        df.drop(columns='lat', inplace=True)
+        # Remove the data if staff number is not valid                    
+        df['staff_numbers'] = pd.to_numeric( df['staff_numbers'].apply(self.remove_char_from_string),errors='coerce', downcast="integer") 
+        df.dropna(subset = ['staff_numbers'],how='any',inplace= True)
         return df
+    
+    def remove_char_from_string(self,value):
+        return re.sub(r'\D', '',value)
     
     def convert_product_weights(self, df):
         '''Convert all weights to gram in weight column'''
@@ -72,6 +78,8 @@ class DataCleaning:
         '''Drop null values and clean date data in products data'''
         # Drop NULL values
         df.dropna(inplace = True)
+        # Handle typo
+        df['removed'] = df['removed'].str.replace('Still_avaliable', 'Still_available')
         # Handle date errors
         df['date_added'] = pd.to_datetime(df['date_added'], errors='coerce')
         return df
@@ -87,14 +95,10 @@ class DataCleaning:
         df.dropna(inplace = True)
         return df
     
-    def clean_date_times(self, df):
-        '''Convert date strings to integers and correct format'''
-        # Handle date errors
-        df['month'] = pd.to_numeric( df['month'],errors='coerce', downcast="integer")
-        df['year'] = pd.to_numeric( df['year'], errors='coerce', downcast="integer")
-        df['day'] = pd.to_numeric( df['day'], errors='coerce', downcast="integer")
-        df['timestamp'] = pd.to_datetime(df['timestamp'], format='%H:%M:%S', errors='coerce')
-        # Drop NULL values
-        df.dropna(how='any',inplace= True)
-        df.reset_index(inplace=True)       
+    def clean_date_times(self,df,column_name):
+        df[column_name] = pd.to_datetime(df[column_name], format='%Y-%m-%d', errors='ignore')
+        df[column_name] = pd.to_datetime(df[column_name], format='%Y %B %d', errors='ignore')
+        df[column_name] = pd.to_datetime(df[column_name], format='%B %Y %d', errors='ignore')
+        df[column_name] = pd.to_datetime(df[column_name], errors='coerce')
+        df.reset_index(inplace=True)
         return df

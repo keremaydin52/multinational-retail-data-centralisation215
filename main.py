@@ -83,6 +83,7 @@ class Main:
 
         # Clean data 
         df =  data_cleaning.clean_products_data(df)
+        print(df)
         
         # Upload to db 
         creds = db_connector.read_db_creds("local_db_creds.yaml") 
@@ -137,4 +138,4 @@ class Main:
 
 if __name__ == '__main__':
     main = Main()
-    main.upload_dim_date_times()
+    main.upload_dim_users()
