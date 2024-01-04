@@ -28,3 +28,6 @@ Queries folder includes sql files for different purposes.For better organization
 
 #### Update DB
 This sql file includes queries to update or change tables. Also there are display data queries to decide what has to be updated exactly.
+
+#### Display Data
+This sql file includes queries to display data for different scenarios. You can find the scenarios in comments.
